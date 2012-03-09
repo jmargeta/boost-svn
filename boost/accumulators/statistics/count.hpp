@@ -42,8 +42,15 @@ namespace impl
         {
             return this->cnt;
         }
-
+        
     private:
+        friend class boost::serialization::access;        
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version)
+        {
+            ar & make_nvp("value", cnt);
+        }
+
         std::size_t cnt;
     };
 
