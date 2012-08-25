@@ -1,19 +1,20 @@
 #~ Copyright 2002-2007 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
-#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
 
 # Clean env vars of any "extra" empty values.
 for local v in ARGV CC CFLAGS LIBS
 {
-	local values ;
-	for local x in $($(v))
-	{
-		if $(x) != ""
-		{
-			values += $(x) ;
-		}
-	}
-	$(v) = $(values) ;
+    local values ;
+    for local x in $($(v))
+    {
+        if $(x) != ""
+        {
+            values += $(x) ;
+        }
+    }
+    $(v) = $(values) ;
 }
 
 # Platform related specifics.
@@ -139,9 +140,8 @@ toolset-root = [ MATCH --toolset-root=(.*) : $(ARGV) ] ;
     toolset-root = $(toolset-root:J="") ;
 }
 
-# Configure the implemented toolsets. These are minimal
-# commands and options to compile the full Jam. When
-# adding new toolsets make sure to add them to the
+# Configure the implemented toolsets. These are minimal commands and options to
+# compile the full Jam. When adding new toolsets make sure to add them to the
 # "known" list also.
 
 rule toolset ( name command .type ? : opt.out + : opt.define * : flags * : linklibs * )
@@ -258,7 +258,8 @@ toolset kylix bc++ : -o : -D
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Metrowerks CodeWarrior 8.x
 {
-    # Even though CW can compile all files at once, it crashes if it tries in the bjam case.
+    # Even though CW can compile all files at once, it crashes if it tries in
+    # the bjam case.
     local mwcc = ; if $(OS) = NT { mwcc = mwcc ; } else { mwcc = mwc$(OSPLAT:L) ; }
     mwcc ?= mwcc ;
     toolset metrowerks $(mwcc) : "-o " : -D
@@ -472,22 +473,18 @@ else
 
 if --show-locate-target in $(ARGV)
 {
-  ECHO $(locate-target) ;
+    ECHO $(locate-target) ;
 }
 
 # We have some different files for UNIX, and NT.
 jam.source =
-    command.c compile.c constants.c debug.c execcmd.c function.c glob.c
-    hash.c hcache.c headers.c hdrmacro.c
-    jam.c jambase.c jamgram.c
-    lists.c make.c make1.c mem.c object.c
-    option.c output.c parse.c regexp.c rules.c
-    scan.c search.c subst.c w32_getreg.c
-    timestamp.c variable.c modules.c strings.c filesys.c
-    builtins.c pwd.c class.c native.c md5.c modules/set.c
-    modules/path.c modules/regex.c modules/property-set.c
-    modules/sequence.c modules/order.c
-    ;
+    command.c compile.c constants.c debug.c execcmd.c frames.c function.c glob.c
+    hash.c hcache.c headers.c hdrmacro.c jam.c jambase.c jamgram.c lists.c
+    make.c make1.c mem.c object.c option.c output.c parse.c regexp.c rules.c
+    scan.c search.c subst.c w32_getreg.c timestamp.c variable.c modules.c
+    strings.c filesys.c builtins.c pwd.c class.c native.c md5.c modules/set.c
+    modules/path.c modules/regex.c modules/property-set.c modules/sequence.c
+    modules/order.c ;
 if $(OS) = NT
 {
     jam.source += execnt.c filent.c pathunix.c ;
@@ -749,7 +746,8 @@ if $(UNIX) = true { actions [YACC] {
 } }
 if $(grammar) && ! $(yacc)
 {
-    EXIT "Could not find the 'yacc' tool, and therefore can not build the grammar." ;
+    EXIT Could not find the 'yacc' tool, and therefore can not build the
+        grammar. ;
 }
 if $(grammar) && $(yacc)
 {
@@ -790,29 +788,31 @@ rule .jam
 
 
 # Scan sources for header dependencies.
-#	WARNING: Yes those are *REAL TABS* below. DO NOT CHANGE,
-#	under any circumstances, to spaces!! And the tabs
-#	indenting this are so that if someone is in the mood to
-#	replace tabs they hit this comment, and hopefully notice
-#	their error.
-rule .scan
+#
+# In order to keep things simple, we do not support include paths here. This
+# means our build will only detect changes in headers included relative to the
+# current folder as opposed to those included from somewhere on the include
+# path.
+rule .scan ( targets + )
 {
-    HDRRULE on $(<:D=) = .hdr.scan ;
-    HDRSCAN on $(<:D=) = "^[ 	]*#[ 	]*include[ 	]*([<\"][^\">]*[\">]).*$" ;
+    HDRRULE on $(targets) = .hdr.scan ;
+    HDRSCAN on $(targets) = "^[ \t]*#[ \t]*include[ \t]*\"([^\"]*)\".*$" ;
 }
-rule .hdr.scan
+rule .hdr.scan ( target : includes * : binding )
 {
-    local hdrs = [ GLOB . : $(>:D=) ] ;
-    INCLUDES $(<:D=) : $(hdrs:D=) ;
-    HDRRULE on $(>:D=) = .hdr.scan ;
-    HDRSCAN on $(>:D=) = "^[ 	]*#[ 	]*include[ 	]*([<\"][^\">]*[\">]).*$" ;
+    local target-path = [ NORMALIZE_PATH $(binding:D) ] ;
+    NOCARE $(includes) ;
+    INCLUDES $(target) : $(includes) ;
+    SEARCH on $(includes) = $(target-path) ;
+    ISFILE $(includes) ;
+    .scan $(includes) ;
 }
-.scan [ GLOB . : *.c ] ;
+.scan $(jam.source) ;
 
-# Distribution making from here on out. Assumes that
-# the docs are already built as html at ../doc/html. If
-# they aren't, then the docs are not included in the dist
-# archive.
+
+# Distribution making from here on out. Assumes that the docs are already built
+# as HTML at ../doc/html. Otherwise they will not be included in the built
+# distribution archive.
 dist.license =
     [ GLOB . : $(LICENSE).txt ]
     ;
@@ -1000,8 +1000,8 @@ actions [RPM] {
     rm -f rpm.out
 }
 
-# The distribution targets. Don't bother with the targets if
-# distribution build not requested.
+# The distribution targets. Do not bother with them unless this is a
+# distribution build.
 if dist in $(ARGV)
 {
     #~ .binary bjam ;

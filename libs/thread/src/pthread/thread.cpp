@@ -24,7 +24,7 @@
 #include <unistd.h>
 #endif
 
-#include <libs/thread/src/pthread/timeconv.inl>
+#include "./timeconv.inl"
 
 namespace boost
 {
@@ -138,16 +138,20 @@ namespace boost
                 boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(param)->self;
                 thread_info->self.reset();
                 detail::set_current_thread_data(thread_info.get());
-                try
+#ifndef BOOST_NO_EXCEPTIONS
+                try // BOOST_NO_EXCEPTIONS protected
+#endif
                 {
                     thread_info->run();
                 }
-                catch(thread_interrupted const&)
+#ifndef BOOST_NO_EXCEPTIONS
+                catch(thread_interrupted const&) // BOOST_NO_EXCEPTIONS protected
                 {
                 }
+#endif
 // Removed as it stops the debugger identifying the cause of the exception
 // Unhandled exceptions still cause the application to terminate
-//                 catch(...)
+//                 catch(...) // BOOST_NO_EXCEPTIONS protected
 //                 {
 //                     std::terminate();
 //                 }
@@ -221,14 +225,14 @@ namespace boost
         if (res != 0)
         {
             thread_info->self.reset();
-            throw thread_resource_error();
+            boost::throw_exception(thread_resource_error());
         }
         int detached_state;
         res = pthread_attr_getdetachstate(h, &detached_state);
         if (res != 0)
         {
             thread_info->self.reset();
-            throw thread_resource_error();
+            boost::throw_exception(thread_resource_error());
         }
         if (PTHREAD_CREATE_DETACHED==detached_state)
         {
@@ -423,33 +427,6 @@ namespace boost
             }
         }
 
-#ifdef BOOST_THREAD_USES_CHRONO
-        void
-        sleep_for(const chrono::nanoseconds& ns)
-        {
-            using namespace chrono;
-            if (ns >= nanoseconds::zero())
-            {
-                timespec ts;
-                ts.tv_sec = static_cast<long>(duration_cast<seconds>(ns).count());
-                ts.tv_nsec = static_cast<long>((ns - seconds(ts.tv_sec)).count());
-
-#   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-                BOOST_VERIFY(!pthread_delay_np(&ts));
-#   elif defined(BOOST_HAS_NANOSLEEP)
-                //  nanosleep takes a timespec that is an offset, not
-                //  an absolute time.
-                nanosleep(&ts, 0);
-#   else
-                mutex mx;
-                mutex::scoped_lock lock(mx);
-                condition_variable cond;
-                cond.wait_for(lock, ns);
-#   endif
-            }
-        }
-#endif
-
         void yield() BOOST_NOEXCEPT
         {
 #   if defined(BOOST_HAS_SCHED_YIELD)
@@ -558,6 +535,7 @@ namespace boost
 
         void interruption_point()
         {
+#ifndef BOOST_NO_EXCEPTIONS
             boost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
             if(thread_info && thread_info->interrupt_enabled)
             {
@@ -568,6 +546,7 @@ namespace boost
                     throw thread_interrupted();
                 }
             }
+#endif
         }
 
         bool interruption_enabled() BOOST_NOEXCEPT

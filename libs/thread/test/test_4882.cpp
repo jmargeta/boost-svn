@@ -1,3 +1,8 @@
+// Copyright (C) 2010 Vicente Botet
+//
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
+//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 #include <boost/thread/thread.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
@@ -8,7 +13,9 @@ boost::shared_mutex mutex;
 void thread()
 {
   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
+#ifndef BOOST_NO_EXCEPTIONS
   try
+#endif
   {
     for (int i =0; i<10; ++i)
     {
@@ -23,10 +30,12 @@ void thread()
       }
     }
   }
+#ifndef BOOST_NO_EXCEPTIONS
   catch (boost::lock_error& le)
   {
     std::cerr << "lock_error exception\n";
   }
+#endif
   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
 }
 

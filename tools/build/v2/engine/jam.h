@@ -4,10 +4,11 @@
  * This file is part of Jam - see jam.c for Copyright information.
  */
 
-/*  This file is ALSO:
- *  Copyright 2001-2004 David Abrahams.
- *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+/* This file is ALSO:
+ * Copyright 2001-2004 David Abrahams.
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
  */
 
 /*
@@ -30,14 +31,14 @@
 
 #ifdef NT
 
-#include <fcntl.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <ctype.h>
+#include <fcntl.h>
 #include <malloc.h>
 #ifndef __MWERKS__
     #include <memory.h>
 #endif
+#include <stdio.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <string.h>
 #include <time.h>
@@ -50,7 +51,6 @@
 #define USE_EXECNT
 #define USE_PATHUNIX
 #define PATH_DELIM '\\'
-#define DOWNSHIFT_PATHS
 
 /* AS400 cross-compile from NT. */
 
@@ -68,7 +68,8 @@
     #undef HAVE_POPEN
 #endif
 
-# endif
+#endif  /* #ifdef NT */
+
 
 /*
  * Windows MingW32
@@ -94,9 +95,9 @@
 #define USE_EXECUNIX
 #define USE_PATHUNIX
 #define PATH_DELIM '\\'
-#define DOWNSHIFT_PATHS
 
-#endif
+#endif  /* #ifdef MINGW */
+
 
 /*
  * God fearing UNIX.
@@ -291,7 +292,6 @@
 /* All the UNIX includes */
 
 #include <sys/types.h>
-#include <sys/stat.h>
 
 #ifndef OS_MPEIX
     #include <sys/file.h>
@@ -325,7 +325,8 @@
     #include <malloc.h>
 #endif
 
-#endif
+#endif  /* #ifndef OSMINOR */
+
 
 /*
  * OSPLAT definitions - suppressed when it is a one-of-a-kind.
@@ -363,7 +364,6 @@
     #define OSPLAT "OSPLAT=X86_64"
 #endif
 
-
 #if defined( __sparc__ ) || \
     defined( __sparc   )
     #define OSPLAT "OSPLAT=SPARC"
@@ -388,6 +388,7 @@
 #ifndef OSPLAT
     #define OSPLAT ""
 #endif
+
 
 /*
  * Jam implementation misc.
@@ -431,8 +432,12 @@ struct globs
     long   timeout;             /* number of seconds to limit actions to,
                                  * default 0 for no limit.
                                  */
-    int    dart;                /* output build and test results formatted for Dart */
-    int    max_buf;             /* maximum amount of output saved from target (kb) */
+    int    dart;                /* output build and test results formatted for
+                                 * Dart
+                                 */
+    int    max_buf;             /* maximum amount of output saved from target
+                                 * (kb)
+                                 */
 };
 
 extern struct globs globs;
@@ -440,7 +445,7 @@ extern struct globs globs;
 #define DEBUG_MAKE     ( globs.debug[ 1 ] )   /* show actions when executed */
 #define DEBUG_MAKEQ    ( globs.debug[ 2 ] )   /* show even quiet actions */
 #define DEBUG_EXEC     ( globs.debug[ 2 ] )   /* show text of actons */
-#define DEBUG_MAKEPROG ( globs.debug[ 3 ] )   /* show progress of make0 */
+#define DEBUG_MAKEPROG ( globs.debug[ 3 ] )   /* show make0 progress */
 #define DEBUG_BIND     ( globs.debug[ 3 ] )   /* show when files bound */
 
 #define DEBUG_EXECCMD  ( globs.debug[ 4 ] )   /* show execcmds()'s work */
@@ -449,7 +454,7 @@ extern struct globs globs;
 
 #define DEBUG_HEADER   ( globs.debug[ 6 ] )   /* show result of header scan */
 #define DEBUG_BINDSCAN ( globs.debug[ 6 ] )   /* show result of dir scan */
-#define DEBUG_SEARCH   ( globs.debug[ 6 ] )   /* show attempts at binding */
+#define DEBUG_SEARCH   ( globs.debug[ 6 ] )   /* show binding attempts */
 
 #define DEBUG_VARSET   ( globs.debug[ 7 ] )   /* show variable settings */
 #define DEBUG_VARGET   ( globs.debug[ 8 ] )   /* show variable fetches */
@@ -462,7 +467,7 @@ extern struct globs globs;
 #define DEBUG_PROFILE  ( globs.debug[ 10 ] )  /* dump rule execution times */
 #define DEBUG_PARSE    ( globs.debug[ 11 ] )  /* debug parsing */
 #define DEBUG_GRAPH    ( globs.debug[ 12 ] )  /* debug dependencies */
-#define DEBUG_FATE     ( globs.debug[ 13 ] )  /* show changes to fate in make0() */
+#define DEBUG_FATE     ( globs.debug[ 13 ] )  /* show fate changes in make0() */
 
 /* Everyone gets the memory definitions. */
 #include "mem.h"
