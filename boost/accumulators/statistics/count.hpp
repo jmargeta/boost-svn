@@ -14,6 +14,12 @@
 #include <boost/accumulators/framework/depends_on.hpp>
 #include <boost/accumulators/statistics_fwd.hpp>
 
+#include <boost/serialization/nvp.hpp>
+#include <boost/serialization/serialization.hpp>
+
+
+
+
 namespace boost { namespace accumulators
 {
 
@@ -48,6 +54,7 @@ namespace impl
         template<class Archive>
         void serialize(Archive & ar, const unsigned int version)
         {
+            using boost::serialization::make_nvp;
             ar & make_nvp("value", cnt);
         }
 
